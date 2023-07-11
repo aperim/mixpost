@@ -58,6 +58,8 @@ RUN sed -i \
     -e 's/^#\(LoadModule .*mod_proxy_fcgi.so\)/\1/' \
     -e 's/^#\(LoadModule .*mod_rewrite.so\)/\1/' \
     -e 's/DirectoryIndex index.html/DirectoryIndex index.php index.html/' \
+    -e 's/\/proc\/self\/fd\/2/\/proc\/1\/fd\/2/g' \
+    -e 's/\/proc\/self\/fd\/1/\/proc\/1\/fd\/2/g' \
     /usr/local/apache2/conf/httpd.conf
 
 COPY rootfs /
