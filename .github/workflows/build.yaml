@@ -10,7 +10,6 @@ on:
 
 jobs:
   build:
-    if: (github.event_name == 'pull_request' && github.event.pull_request.merged == true) || (github.event_name == 'release' && github.event.action == 'published')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -40,11 +39,10 @@ jobs:
             latest=${{ github.event_name == 'push' }}
           tags: |
             type=schedule
-            type=ref,event=branch
             type=ref,event=pr
             type=semver,pattern={{version}}
             type=sha
-            type=edge,enable=true,priority=700,prefix=,suffix=,branch=$repo.default_branch
+            type=ref,event=branch,compare=main,value=edge
 
       - name: Get current date
         id: date
@@ -68,6 +66,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-old,mode=max
+          outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=Mixpost in a container
           build-args: |
             BUILD_DATE=${{ steps.date.outputs.date }}
             VCS_REF=${{ github.sha }}
