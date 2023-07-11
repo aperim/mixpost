@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM httpd:alpine
 
 ARG BUILD_DATE
 ARG VCS_REF
@@ -27,14 +27,8 @@ RUN apk update && \
     geoip \
     geoip-dev \
     imagemagick \
-    nginx \
-    nginx-mod-http-geoip2 \
-    nginx-mod-http-image-filter \
-    nginx-mod-http-xslt-filter \
-    nginx-mod-mail \
-    nginx-mod-stream \
-    nginx-mod-stream-geoip2 \
     openrc \
+    php81-apache2 \
     php81-curl \
     php81-dom \
     php81-exif \
@@ -57,6 +51,14 @@ RUN apk update && \
     vim \
     zsh \
     && rm -rf /var/cache/apk/*
+
+RUN sed -i \
+    -e 's/^#\(Include .*httpd-vhosts.conf\)/\1/' \
+    -e 's/^#\(LoadModule .*mod_proxy.so\)/\1/' \
+    -e 's/^#\(LoadModule .*mod_proxy_fcgi.so\)/\1/' \
+    -e 's/^#\(LoadModule .*mod_rewrite.so\)/\1/' \
+    -e 's/DirectoryIndex index.html/DirectoryIndex index.php index.html/' \
+    /usr/local/apache2/conf/httpd.conf
 
 COPY rootfs /
 

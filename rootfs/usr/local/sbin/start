@@ -114,11 +114,14 @@ else
   echo "Backup directory storage/app/migrations does not exist"
 fi
 
-# Set the nginx port
-# Always update the listen entries in the Nginx configuration to reflect PORT value
-sed -i "s/listen [0-9]*;/listen $APP_PORT;/g" /etc/nginx/http.d/default.conf
-sed -i "s/listen \[::\]:[0-9]*;/listen [::]:$APP_PORT;/g" /etc/nginx/http.d/default.conf
-echo -e "\033[33mUpdated 'listen' entries in Nginx conf to port $APP_PORT\033[0m"
+# Set the Apache port
+# Update the Apache listen entry to use the APP_PORT value
+sed -i "s/Listen [0-9]*/Listen $APP_PORT/g" /usr/local/apache2/conf/httpd.conf
+echo -e "\033[33mUpdated 'Listen' entry in Apache conf to port $APP_PORT\033[0m"
+
+# Also update the Apache virtual host entry to use the APP_PORT value
+sed -i "s/<VirtualHost \*:[0-9]*>/<VirtualHost *:$APP_PORT>/g" /usr/local/apache2/conf/extra/httpd-vhosts.conf
+echo -e "\033[33mUpdated 'VirtualHost' entry in Apache conf to use port $APP_PORT\033[0m"
 
 # Delete duplicated migration files
 delete_files() {
