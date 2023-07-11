@@ -5,10 +5,12 @@ on:
     types: [closed]
     branches:
       - main
+  release:
+    types: [published]
 
 jobs:
   build:
-    if: github.event.pull_request.merged == true
+    if: (github.event_name == 'pull_request' && github.event.pull_request.merged == true) || (github.event_name == 'release' && github.event.action == 'published')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
