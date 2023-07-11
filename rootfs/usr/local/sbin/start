@@ -3,6 +3,7 @@
 : "${MIXPOST_VERSION:='^0.2'}"
 : "${LICENSE_KEY:=''}"
 : "${LICENSE_EMAIL:='username'}"
+: "${APP_KEY:=''}"
 
 # Set default PUID and PGID values if not set
 : ${PUID:=1000}
@@ -52,7 +53,7 @@ if id "www-data" &>/dev/null; then
     echo -e "\033[32mUser www-data exists\033[0m"
 else
     echo -e "\033[31mUser www-data does not exist, creating...\033[0m"
-    adduser -D -H -u $PUID -G www-data www-data
+    adduser -D -h /var/www/html -s /bin/zsh -u $PUID -G www-data www-data
 fi
 
 # Check if www-data's uid is the value we want
@@ -89,7 +90,7 @@ echo "{
     }
   }
 }" > ~/.composer/auth.json
- 
+
 # Create standalone app
 composer create-project inovector/mixpost-pro-team-app:$APP_VERSION standalone-app || exit 1
 
@@ -161,7 +162,9 @@ php /var/www/html/artisan mixpost:clear-services-cache
 chown -R www-data:www-data /var/www/html || exit 2
 
 # Start cron
-service dcron start
+rc-status -a
+touch /run/openrc/softlevel
+rc-service dcron start
 
 # Start supervisor
 /usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf &
