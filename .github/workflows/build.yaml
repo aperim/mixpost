@@ -33,17 +33,19 @@ jobs:
 
       - name: Extract metadata (tags, labels) for Docker
         id: docker_meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: ghcr.io/${{ github.repository }}
           flavor: |
             latest=${{ github.event_name == 'push' }}
             sha
           tags: |
-            type=sha,separator=-,prefix=sha-
-            type=semver,pattern={{version}}
+            type=schedule
             type=ref,event=branch
-            type=edge
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=sha
+            type=edge,enable=true,priority=700,prefix=,suffix=,branch=$repo.default_branch
 
       - name: Get current date
         id: date
