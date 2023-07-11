@@ -38,11 +38,11 @@ jobs:
           flavor: |
             latest=${{ github.event_name == 'push' }}
           tags: |
-            type=schedule
-            type=ref,event=pr
             type=semver,pattern={{version}}
-            type=sha
-            type=ref,event=branch,compare=main,value=edge
+            type=ref,event=branch
+            type=ref,event=pr
+            type=edge,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'release' && github.event.action == 'published'}}
 
       - name: Get current date
         id: date
