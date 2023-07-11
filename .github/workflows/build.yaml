@@ -38,7 +38,6 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           flavor: |
             latest=${{ github.event_name == 'push' }}
-            sha
           tags: |
             type=schedule
             type=ref,event=branch
