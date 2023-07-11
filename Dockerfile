@@ -66,5 +66,4 @@ ENV APP_PORT=80
 
 WORKDIR /var/www/html
 
-ENTRYPOINT [ "/bin/bash" ]
 CMD ["/usr/local/sbin/start"]
