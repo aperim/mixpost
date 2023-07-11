@@ -1,0 +1,171 @@
+#!/usr/bin/env bash
+
+: "${MIXPOST_VERSION:='^0.2'}"
+: "${LICENSE_KEY:=''}"
+: "${LICENSE_EMAIL:='username'}"
+
+# Set default PUID and PGID values if not set
+: ${PUID:=1000}
+: ${PGID:=1000}
+
+# Set the default APP_PORT to listen on to 80 if not set
+: ${APP_PORT:=80}
+
+if [ "${MIXPOST_VERSION:0:1}" = "^" ]; then
+  echo "MIXPOST_VERSION - OK"
+else
+  echo "ERROR! MIXPOST_VERSION does not start with ^"
+  exit 1
+fi
+
+# Compatibility. Beginning of major stable releases. Package Version = App Version
+case "$MIXPOST_VERSION" in
+  ^0.2)
+    APP_VERSION="^0.1"
+    ;;
+  ^0.3)
+    APP_VERSION="^0.2"
+    ;;
+  ^0.4)
+    APP_VERSION="^0.2"
+    ;;
+  ^0.5)
+    APP_VERSION="^0.2"
+    ;;
+  ^0.6)
+    APP_VERSION="^0.2"
+    ;;
+  ^0.7)
+    APP_VERSION="^0.2"
+    ;;
+  ^0.8)
+    APP_VERSION="^0.2"
+    ;;
+  *)
+    echo "ERROR! Unknown MIXPOST_VERSION: $MIXPOST_VERSION"
+    exit 1
+    ;;
+esac
+
+# Check if www-data user exists
+if id "www-data" &>/dev/null; then
+    echo -e "\033[32mUser www-data exists\033[0m"
+else
+    echo -e "\033[31mUser www-data does not exist, creating...\033[0m"
+    adduser -D -H -u $PUID -G www-data www-data
+fi
+
+# Check if www-data's uid is the value we want
+current_uid=$(id -u www-data 2>/dev/null)
+if [ "$current_uid" != "$PUID" ]; then
+    echo -e "\033[33mChanging www-data uid to $PUID\033[0m"
+    usermod -u $PUID www-data
+fi
+
+# Check if www-data group exists
+if getent group "www-data" &>/dev/null; then
+    echo -e "\033[32mGroup www-data exists\033[0m"
+else
+    echo -e "\033[31mGroup www-data does not exist, creating...\033[0m"
+    addgroup -g $PGID www-data
+fi
+
+# Check if www-data's gid is the value we want
+current_gid=$(getent group www-data | awk -F: '{print $3}')
+if [ "$current_gid" != "$PGID" ]; then
+    echo -e "\033[33mChanging www-data gid to $PGID\033[0m"
+    groupmod -g $PGID www-data
+fi
+
+# Create needed directories
+mkdir -p ~/.composer /var/log/supervisor /var/www/html/storage/logs /run/php
+
+# Create auth.json file for composer
+echo "{
+  \"http-basic\": {
+    \"packages.inovector.com\": {
+      \"username\": \"${LICENSE_EMAIL}\",
+      \"password\": \"${LICENSE_KEY}\"
+    }
+  }
+}" > ~/.composer/auth.json
+ 
+# Create standalone app
+composer create-project inovector/mixpost-pro-team-app:$APP_VERSION standalone-app || exit 1
+
+# Copy app's files to root folder
+cp -r standalone-app/* .
+
+# Delete downloaded standalone app
+rm -rf standalone-app
+
+# Restore backup migration files from storage (volume) 
+if [ -d "storage/app/migrations" ]; then
+  files=(storage/app/migrations/*)
+
+  if [ ${#files[@]} -gt 0 ]; then
+    echo "Copying backup migration files"
+    cp storage/app/migrations/* database/migrations/
+  else
+    echo "No backup migration files found."
+  fi
+else
+  echo "Backup directory storage/app/migrations does not exist"
+fi
+
+# Set the nginx port
+# Always update the listen entries in the Nginx configuration to reflect PORT value
+sed -i "s/listen [0-9]*;/listen $APP_PORT;/g" /etc/nginx/http.d/default.conf
+sed -i "s/listen \[::\]:[0-9]*;/listen [::]:$APP_PORT;/g" /etc/nginx/http.d/default.conf
+echo -e "\033[33mUpdated 'listen' entries in Nginx conf to port $APP_PORT\033[0m"
+
+# Delete duplicated migration files
+delete_files() {
+  pattern=$1
+  description=$2
+  files=( $(ls $pattern 2>/dev/null) )
+  
+  echo "Found ${description} ${#files[@]} files"
+
+  if [[ ${#files[@]} -gt 1 ]]; then
+    echo "Deleting ${description} files..."
+    for file in "${files[@]:1}"; do
+      rm -f "$file"
+      echo "File $file deleted."
+    done
+  fi
+}
+
+delete_files "database/migrations/*_create_job_batches_table.php" "job_batches"
+delete_files "database/migrations/*_create_mixpost_tables.php" "mixpost"
+
+# Backup migration files to storage (volume)
+cp -r database/migrations storage/app
+
+# Laravel stuff
+php artisan storage:link
+php artisan config:cache
+php artisan route:cache
+
+# Wait for MySQL
+wait-for-it ${DB_HOST:-mysql}:3306 -t 60
+
+# Migrate database tables
+php /var/www/html/artisan migrate --force
+
+# Clear Mixpost cache
+php /var/www/html/artisan mixpost:clear-settings-cache
+php /var/www/html/artisan mixpost:clear-services-cache
+
+# Permissions
+chown -R www-data:www-data /var/www/html || exit 2
+
+# Start cron
+service dcron start
+
+# Start supervisor
+/usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf &
+
+echo "Mixpost has started!"
+
+tail -f /dev/null
