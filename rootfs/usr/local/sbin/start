@@ -45,6 +45,9 @@ case "$MIXPOST_VERSION" in
   ^0.9)
     APP_VERSION="^0.2"
     ;;
+  ^0.10)
+    APP_VERSION="^0.2"
+    ;;
   *)
     echo "ERROR! Unknown MIXPOST_VERSION: $MIXPOST_VERSION"
     exit 1
