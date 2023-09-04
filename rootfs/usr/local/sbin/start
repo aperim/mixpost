@@ -45,8 +45,11 @@ start() {
   php artisan route:cache
 
   # Wait for MySQL
-  wait-for-it ${DB_HOST:-mysql}:3306 -t 60
+  wait-for-it ${DB_HOST:-mysql}:${DB_PORT:-3306} -t 60
 
+  # Wait for Redis
+  wait-for-it ${REDIS_HOST:-redis}:${REDIS_PORT:-6379} -t 60
+  
   # Update migration timestamps (In the case of a legacy project)
   php artisan mixpost:update-migration-timestamps
 
