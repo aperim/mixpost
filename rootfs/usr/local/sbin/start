@@ -81,7 +81,7 @@ start() {
 }
 
 if [ "${MIXPOST_VERSION:0:1}" = "^" ]; then
-  echo "MIXPOST_VERSION - OK"
+  echo "MIXPOST_VERSION ${MIXPOST_VERSION}- OK"
 else
   echo "ERROR! MIXPOST_VERSION does not start with ^"
   exit 1
