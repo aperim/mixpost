@@ -22,7 +22,7 @@ Just replace `<tag>`, `<Your-License-Email>`, and `<Your-License-Key>` with appr
 
 ## Required Environment Variables
 
-1. `MIXPOST_VERSION`: Specifies the version of Mixpost Pro to be installed. It should start with the `^` character (e.g., `^0.2`).
+1. `MIXPOST_VERSION`: Specifies the version of Mixpost Pro to be installed. It should start with the `^` character (e.g., `^1.0`).
 
 2. `LICENSE_KEY` and `LICENSE_EMAIL`: These should be acquired from the Mixpost Pro developer/vendor to use the Mixpost Pro application.
 
