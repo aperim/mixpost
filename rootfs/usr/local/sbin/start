@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-: "${MIXPOST_VERSION:='^0.2'}"
+: "${MIXPOST_VERSION:='^1.0'}"
 : "${LICENSE_KEY:=''}"
 : "${LICENSE_EMAIL:='username'}"
 : "${APP_KEY:=''}"
