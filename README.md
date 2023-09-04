@@ -15,7 +15,7 @@ docker pull ghcr.io/aperim/mixpost:<tag>
 Once pulled, run the Docker container as follows:
 
 ```bash
-docker run -d -e MIXPOST_VERSION=^0.2 -e LICENSE_EMAIL=<Your-License-Email> -e LICENSE_KEY=<Your-License-Key> -e PUID=1000 -e PGID=1000 -e APP_PORT=80 -p 80:80 --name mixpost ghcr.io/aperim/mixpost:<tag>
+docker run -d -e MIXPOST_VERSION=^1.0 -e LICENSE_EMAIL=<Your-License-Email> -e LICENSE_KEY=<Your-License-Key> -e PUID=1000 -e PGID=1000 -e APP_PORT=80 -p 80:80 --name mixpost ghcr.io/aperim/mixpost:<tag>
 ```
 
 Just replace `<tag>`, `<Your-License-Email>`, and `<Your-License-Key>` with appropriate values. 
